@@ -19,3 +19,4 @@ Para este proyecto implementamos **GitFlow**, porque:
 - Comparado con GitFlow que nos da más claridad y control al momento de simular flujos DevOps en el ámbito académico.
 
 Por esta razón, elegimos **GitFlow** como estrategia de ramificación.
+
