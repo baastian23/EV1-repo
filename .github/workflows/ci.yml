@@ -70,26 +70,22 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Login GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Prepare env for Compose
         run: |
           echo "COMMIT_SHA=${{ github.sha }}" >> .env
           echo "OWNER=${{ github.repository_owner }}" >> .env
+          echo "REPO=${{ github.event.repository.name }}" >> .env
           cat .env
-
       - name: Deploy (Compose) with 2 replicas
         run: |
           docker compose pull
           docker compose up -d --scale web=2
-          sleep 5
+          sleep 8
           curl -sS -I http://localhost:8080 | grep -q "200 OK"
           curl -sS -I http://localhost:8080/MiCaso.html | grep -q "200 OK"
-
       - name: Teardown
         if: always()
         run: docker compose down -v

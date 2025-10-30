@@ -4,24 +4,17 @@
 version: "3.8"
 services:
   web:
-    image: ghcr.io/${OWNER}/ev1-repo:${COMMIT_SHA}
+    image: ghcr.io/${OWNER}/${REPO}:${COMMIT_SHA}
     ports:
       - "8080:80"
     read_only: true
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
+    cap_drop: [ "ALL" ]
+    security_opt: [ "no-new-privileges:true" ]
     tmpfs:
       - /var/cache/nginx
       - /var/run
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 128M
