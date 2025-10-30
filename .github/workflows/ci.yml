@@ -6,28 +6,90 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
-  build-and-smoke-test:
+  test-build-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker
-        run: docker build -t ev1-site:ci .
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Run container
-        run: docker run -d -p 8080:80 --name ev1 ev1-site:ci
+      - name: Install dev deps
+        run: npm install
 
-      - name: Smoke test raíz
+      - name: Unit tests (Jest)
+        run: npm test
+
+      - name: Build Docker (local)
+        run: docker build -t ev1-repo:ci .
+
+      - name: Trivy scan (container image) - fail on HIGH+
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ev1-repo:ci
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Snyk container test (opcional, bloquea en HIGH+)
+        uses: snyk/actions/docker@master
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ev1-repo:ci
+          args: --severity-threshold=high
+
+      - name: Login GHCR
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build & Push image to GHCR
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+
+  deploy-compose:
+    needs: test-build-scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Prepare env for Compose
         run: |
-          sleep 2
+          echo "COMMIT_SHA=${{ github.sha }}" >> .env
+          echo "OWNER=${{ github.repository_owner }}" >> .env
+          cat .env
+
+      - name: Deploy (Compose) with 2 replicas
+        run: |
+          docker compose pull
+          docker compose up -d --scale web=2
+          sleep 5
           curl -sS -I http://localhost:8080 | grep -q "200 OK"
-
-      - name: Smoke test MiCaso.html
-        run: |
           curl -sS -I http://localhost:8080/MiCaso.html | grep -q "200 OK"
 
-      - name: Stop container
+      - name: Teardown
         if: always()
-        run: docker rm -f ev1
+        run: docker compose down -v
