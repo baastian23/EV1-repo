@@ -42,7 +42,7 @@ jobs:
         run: docker build -t ev2-alpha-note:ci .
 
       - name: Escaneo con Trivy (bloquea en HIGH+)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ev2-alpha-note:ci
           format: table
