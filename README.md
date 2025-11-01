@@ -50,6 +50,30 @@ Usamos **GitFlow**:
 - 1 aprobación mínima.
 - CI (GitHub Actions) en **verde** en push a `develop` y PR a `main`.
 
-### CI/CD (resumen)
-- Workflow en `.github/workflows/ci.yml`.
-- Construye imagen Docker (NGINX) y hace **smoke tests** con `curl` (200 OK).
+## CI/CD, Calidad y Trazabilidad
+
+Pipeline (GitHub Actions):
+1) Tests unitarios (Jest + jsdom).
+2) Build Docker (NGINX) y escaneo de imagen con Trivy (bloquea en HIGH+). Opcional Snyk si `SNYK_TOKEN` está configurado.
+3) Push de la imagen a GHCR.
+4) Despliegue simulado con Docker Compose (2 réplicas) y smoke tests (200 OK).
+
+Seguridad:
+- Dependabot (npm, Docker y GitHub Actions).
+- CodeQL para análisis estático.
+- Trivy (y Snyk opcional) bloquean el pipeline si hay vulnerabilidades severas.
+
+Escalabilidad y gobernanza:
+- `docker-compose.yml` define límites de CPU/Mem, `read_only`, `no-new-privileges`, `cap_drop: ALL`.
+- NGINX con headers de seguridad en `nginx.conf`.
+
+Ejecución local:
+```sh
+docker build -t ev1-repo:local .
+docker run -d -p 8080:80 ev1-repo:local
+# o con Compose (requiere .env con COMMIT_SHA y OWNER o ajusta la imagen)
+```
+
+Trazabilidad:
+- Flujo GitFlow (main, develop, feature/*).
+- PRs con checks, imagen versionada en GHCR por commit SHA.
