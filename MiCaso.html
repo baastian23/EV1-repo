@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lista de Canciones - Alpha Note</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+      background: linear-gradient(180deg, #f2f6fc 0%, #e2e8f0 100%);
+      color: #1a202c;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* HEADER AZUL */
+    .site-header {
+      background: #2b6cb0;
+      color: white;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .logo-img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.5);
+      background: #1a202c;
+    }
+
+    .hero-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 240px;
+    }
+
+    .titulo-principal {
+      color: #fff;
+      font-size: 1.6rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .subtitulo {
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      font-weight: 400;
+    }
+
+    .btn-volver {
+      background-color: #2c5282;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: fit-content;
+    }
+
+    .btn-volver:hover {
+      background-color: #1e3a5f;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      transform: translateY(-1px);
+    }
+
+    /* CONTENIDO */
+    .layout {
+      flex: 1;
+      width: 100%;
+      max-width: 900px;
+      margin: 24px auto 48px auto;
+      padding: 0 16px 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #1a202c;
+    }
+
+    .badge-year {
+      background: #2b6cb0;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* TARJETAS DE CLASE */
+    .class-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow:
+        0 10px 25px rgba(0,0,0,0.07),
+        0 4px 10px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .class-headline {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .tag-class {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border: 1px solid #90cdf4;
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* LISTA DE CANCIONES */
+    .song-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .song-item {
+      margin-bottom: 8px;
+    }
+
+    .song-link {
+      color: #2b6cb0;
+      text-decoration: none;
+      font-weight: 500;
+      display: inline-block;
+      padding: 4px 0;
+      border-bottom: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .song-link:hover {
+      color: #1a365d;
+      border-bottom: 1px solid #1a365d;
+    }
+
+    /* FOOTER */
+    .site-footer {
+      background: #1a202c;
+      color: #cbd5e0;
+      padding: 24px;
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.5);
+      margin-top: auto;
+    }
+
+    @media (max-width: 600px) {
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-row">
+      <img src="images.jpeg" alt="Alpha Note Logo" class="logo-img" />
+      <div class="hero-block">
+        <h1 class="titulo-principal">Lista de Canciones</h1>
+        <p class="subtitulo">Estudio musical · Repertorio por clase</p>
+      </div>
+
+      <a class="btn-volver" href="index.html">
+        <span>⬅</span>
+        <span>Volver a la Portada</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="layout">
+    <div class="section-header">
+      <h2>Clases</h2>
+      <span class="badge-year">2025</span>
+    </div>
+
+    <!-- CLASE 1 -->
+    <section class="class-card">
+      <div class="class-headline">
+        <span class="tag-class">Bases</span>
+      </div>
+
+      <ul class="song-list">
+        <li class="song-item">
+          <a class="song-link" href="Let_it_Be.html">
+            Let it Be - The Beatles
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <!-- CLASE 2 -->
+    <section class="class-card">
+      <div class="class-headline">
+        <span class="tag-class">Clásicos</span>
+      </div>
+
+      <ul class="song-list">
+        <li class="song-item">
+          <a class="song-link" href="Imagine.html">
+            Imagine - John Lennon
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="class-card">
+      <div class="class-headline">
+        <span class="tag-class">Repertorio</span>
+      </div>
+
+      <ul class="song-list">
+        <li class="song-item">
+          <a class="song-link" href="Queen_Bohemian_Rhapsody.html">
+            Bohemian Rhapsody - Queen
+          </a>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    © 2025 Microservicio HTML - Todos los derechos reservados
+  </footer>
+
+</body>
+</html>
