@@ -7,12 +7,16 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0"
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^24.0.0"
   },
   "jest": {
     "testEnvironment": "jsdom",
     "testMatch": [
       "**/__tests__/**/*.spec.js"
+    ],
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
     ]
   }
 }

@@ -23,8 +23,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dev deps
-        run: npm install
+      - name: Install deps (prefer ci)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Unit tests (Jest)
         run: npm test
@@ -51,16 +56,25 @@ jobs:
           image: ev1-repo:ci
           args: --severity-threshold=high
 
-      - name: Login GHCR
+      - name: Login GHCR (push events only)
         if: github.event_name == 'push'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Set build metadata
-        run: echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
-
-      - name: Build image
+      - name: Set build metadata (lowercase image path)
         run: |
-          docker build --build-arg GIT_SHA=${GIT_SHA} -t ghcr.io/${{ github.repository }}:${{ github.sha }} -t ghcr.io/${{ github.repository }}:latest .
+          echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Build image (GHCR tags)
+        run: |
+          docker build --build-arg GIT_SHA=${GIT_SHA} -t $IMAGE:${TAG} -t $IMAGE:latest .
+
+      - name: Push image to GHCR
+        if: github.event_name == 'push'
+        run: |
+          docker push $IMAGE:${TAG}
+          docker push $IMAGE:latest
 
   deploy-compose:
     needs: test-build-scan
@@ -73,8 +87,9 @@ jobs:
       - name: Prepare env for Compose
         run: |
           echo "COMMIT_SHA=${{ github.sha }}" >> .env
-          echo "OWNER=${{ github.repository_owner }}" >> .env
-          echo "REPO=${{ github.event.repository.name }}" >> .env
+          # lower-case owner and repo for GHCR paths
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> .env
+          echo "REPO=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> .env
           cat .env
       - name: Deploy (Compose) with 2 replicas
         run: |

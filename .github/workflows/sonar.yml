@@ -1,20 +1,23 @@
 name: sonar
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 jobs:
   sonarcloud:
+    # Run only if token is present and PRs are not from forks (secrets aren't available to forks)
+    if: ${{ secrets.SONAR_TOKEN != '' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-      # Falla si el Quality Gate no es "OK"
       - name: Quality Gate
         uses: SonarSource/sonarcloud-quality-gate-action@v1
         env:
