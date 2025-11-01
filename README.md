@@ -1,96 +1,131 @@
-EV2 – Evaluación Parcial 2 DOY0101
-Integrantes
+🚀 EV2 – Evaluación Parcial 2 (DOY0101)
+Automatización CI/CD y Orquestación de Contenedores
 
-Bastián Concha (@baastian23)
-Sergio Velásquez (@SheoInformatic)
+👥 Integrantes
+Bastián Concha — @baastian23
+Sergio Velásquez — @SheoInformatic
 
-Descripción General
-Repositorio base en HTML y Node.js utilizado para practicar control de versiones y DevOps (CI/CD) durante la Evaluación Parcial 2.
-El proyecto implementa un pipeline completamente automatizado en GitHub Actions, que incluye integración, pruebas, análisis de seguridad, despliegue simulado y orquestación de contenedores.
+🧾 Descripción General
+Repositorio base en HTML y Node.js, utilizado para practicar control de versiones y DevOps (CI/CD) durante la Evaluación Parcial 2.
+Este proyecto implementa un pipeline completamente automatizado en GitHub Actions, que abarca:
+Integración y pruebas automáticas.
+Escaneo de seguridad y control de dependencias.
+Contenedorización con Docker y publicación de imágenes.
+Despliegue simulado.
+Orquestación de contenedores y escalado.
 
-Estrategia de Ramas (GitFlow)
-Justificación
+🌿 Estrategia de Ramas (GitFlow)
+💡 Justificación
+Se implementa GitFlow porque:
+Separamos el código estable (main) del código en desarrollo (develop).
+Permitimos trabajo colaborativo paralelo con ramas feature/*, hotfix/* y release/*.
+Aseguramos trazabilidad, control de cambios y un flujo claro de promoción a producción.
+Es compatible con versionado semántico (SemVer) y con pipelines CI/CD automatizados.
 
-Se utiliza GitFlow por las siguientes razones:
-Permite separar el código estable en main del código en desarrollo (develop).
-Facilita el trabajo colaborativo mediante ramas feature/*, hotfix/* y release/*.
-Asegura trazabilidad, control de versiones y flujo DevOps claro en entornos educativos.
-Compatible con SemVer (versionado semántico) y CI/CD automatizado.
+🧩 Estructura de ramas
+Rama	Uso principal
+main	Producción / versión estable
+develop	Integración de cambios en desarrollo
+feature/*	Nueva funcionalidad
+hotfix/*	Corrección urgente en producción
+release/*	Preparación de una versión estable
 
-Estructura
-Principales: main (producción) y develop (integración).
-Soporte: feature/<nombre>, release/<x.y.z>, hotfix/<nombre>.
 Flujo de merges:
-feature/* → Pull Request a develop (requiere revisión + CI verde).
-release/* → Pull Request a main (con tag vX.Y.Z) y merge a develop.
-hotfix/* → Pull Request a main (urgente) y merge posterior a develop.
+feature/* → PR → develop (requiere revisión y CI en verde).
+release/* → PR → main (se etiqueta vX.Y.Z) y luego merge a develop.
+hotfix/* → PR → main (urgente) y luego merge de main a develop.
 
-Convenciones de nombres
+🧱 Convención de nombres de ramas
 feature/<descripcion-corta>
 hotfix/<descripcion-corta>
 release/<x.y.z>
 
-Estilo de commits (Conventional Commits)
+📝 Estilo de commits (Conventional Commits)
 feat: nueva funcionalidad
 fix: corrección de bug
-docs: documentación
-refactor: refactor interno
+docs: cambios de documentación
+refactor: cambio interno sin alterar comportamiento
 test: pruebas
 chore: tareas de build/devops
 
-CI/CD, Calidad y Trazabilidad
-Pipeline (GitHub Actions)
+⚙️ Pipeline CI/CD (GitHub Actions)
+El pipeline implementa integración continua y entrega continua, cumpliendo con los indicadores.
+Build y Test
+Instala dependencias.
+Ejecuta pruebas unitarias con Jest + jsdom (npm test).
+Si las pruebas fallan, el pipeline se detiene.
 
-Implementa integración y entrega continua (IL2.2 – IL2.4):
+🐋 Contenedorización
+Construye una imagen Docker basada en NGINX.
+Etiqueta la imagen con el commit SHA (GIT_SHA) y con latest.
+Publica la imagen en GitHub Container Registry (GHCR).
 
-Build y Test:
-Instala dependencias y ejecuta pruebas unitarias con Jest + jsdom (npm test).
-Contenedorización (IL2.1):
-Construye una imagen Docker basada en NGINX y la publica en GHCR (GitHub Container Registry).
-Análisis de seguridad (IL2.3):
-Trivy analiza vulnerabilidades (bloquea el pipeline en nivel HIGH+).
-Snyk ejecuta test opcional si existe SNYK_TOKEN.
-Dependabot mantiene actualizadas las dependencias.
-CodeQL realiza análisis estático del código.
+🔐 Análisis de Seguridad
+Trivy escanea la imagen Docker y bloquea el pipeline si hay vulnerabilidades de severidad HIGH o CRITICAL.
+Snyk ejecuta análisis adicional (si existe el secreto SNYK_TOKEN).
+Dependabot mantiene dependencias npm / Docker / Actions actualizadas.
+CodeQL hace análisis estático de seguridad en el código fuente.
 
-Despliegue automático (IL2.4):
+☁️ Despliegue Automático
 Usa Docker Compose para simular un entorno productivo.
-Escala el servicio a 2 réplicas (--scale web=2).
-Valida endpoints (curl http://localhost:8080 → “200 OK”).
-Ejecuta limpieza con docker compose down -v.
+Despliega el servicio con 2 réplicas usando --scale web=2.
+Ejecuta pruebas de humo (smoke tests) vía curl http://localhost:8080 para validar respuesta 200 OK.
+Hace docker compose down -v para limpiar al final.
 
-Orquestación (IL2.5):
-Compose define límites de CPU/Memoria y políticas de seguridad (read_only, no-new-privileges, cap_drop: ALL).
-Configurable para Kubernetes (opcional) mediante manifiestos futuros.
+🧭 Orquestación y Escalado
+docker compose maneja múltiples contenedores y escala el servicio.
+Se aplican restricciones y controles de seguridad:
+read_only
+no-new-privileges
+cap_drop: ALL
+La arquitectura está diseñada para poder migrar a Kubernetes usando manifiestos en una etapa futura.
 
-Seguridad y Gobernanza
-Dependabot: actualiza dependencias npm, Docker y GitHub Actions.
-CodeQL: detección de vulnerabilidades estáticas.
-Trivy: escaneo de imagen Docker, falla en vulnerabilidades críticas.
-Snyk: test condicional de seguridad (requiere token).
-NGINX: configurado con headers seguros definidos en nginx.conf.
+🛡️ Seguridad y Gobernanza
+Herramientas usadas en el pipeline:
+Dependabot → mantiene dependencias actualizadas.
+CodeQL → análisis estático del código.
+Trivy → escaneo de vulnerabilidades en la imagen Docker (falla si hay HIGH+).
+Snyk → test de seguridad opcional en contenedores.
+NGINX → configurado con headers de seguridad en nginx.conf.
+Estas medidas garantizan cumplimiento de seguridad, gobernanza y calidad antes del despliegue.
 
-Escalabilidad y Orquestación
+📈 Escalabilidad y Orquestación
 El archivo docker-compose.yml:
-Define 2 réplicas web para simular balanceo de carga.
-Establece restricciones de recursos (CPU/Memoria) y políticas de seguridad.
-Permite levantar el entorno localmente o dentro del pipeline CI/CD.
+Levanta el servicio en múltiples réplicas (ej: --scale web=2) para simular balanceo de carga.
+Aplica límites de CPU/Memoria y endurecimiento de seguridad.
+Permite levantar el entorno tanto en local como dentro del pipeline.
+Esto simula un entorno cloud controlado, donde se prueba despliegue continuo y comportamiento bajo orquestación.
 
-Variables y Secrets necesarios
-Configurar en Settings → Secrets and variables → Actions:
-SONAR_TOKEN → opcional, activa análisis de SonarCloud.
-SNYK_TOKEN → opcional, habilita test de Snyk.
-GITHUB_TOKEN → integrado automáticamente por GitHub para GHCR.
+🔧 Variables y Secrets requeridos
+Configurar en:
+Settings → Secrets and variables → Actions
+Variable	Uso
+SONAR_TOKEN	(Opcional) Activar análisis de calidad en SonarCloud y Quality Gate.
+SNYK_TOKEN	(Opcional) Habilitar análisis con Snyk en el pipeline.
+GITHUB_TOKEN	Token integrado de GitHub Actions para autenticarse en GHCR y hacer push de la imagen.
 
-Trazabilidad y Auditoría
-Flujo GitFlow con ramas main, develop, feature/*.
-PRs con checks automáticos (CI verde requerido para merge).
-Imágenes en GHCR versionadas por commit (GIT_SHA) y tag latest.
-Etiquetas OCI en las imágenes (org.opencontainers.image.source y revision) para auditoría.
+🔍 Trazabilidad y Auditoría
+Flujo GitFlow (main, develop, feature/*), con PR obligatorios.
+Los Pull Requests requieren revisión humana y pipeline en verde.
+Cada imagen Docker se publica en GHCR con:
+latest
+el hash del commit (GIT_SHA)
+Se agregan etiquetas OCI como org.opencontainers.image.source y revision para auditoría y trazabilidad.
+Esto permite demostrar de forma clara qué commit generó qué imagen y en qué estado fue desplegada.
 
-Resumen final de tu entrega:
-Dockerfile y Compose configurados correctamente.
-CI/CD funcional (build → test → scan → deploy).
-Seguridad y gobernanza implementadas (Trivy, Snyk, Dependabot, CodeQL).
-Escalabilidad y orquestación comprobadas (2 réplicas).
-README completo, profesional y alineado con los indicadores.
+🏁 Resumen de Cumplimiento (Indicadores de Logro)
+Indicador	Descripción	Evidencia en este proyecto Cumple
+Uso de contenedores para facilitar despliegue en la nube	Dockerfile, build de imagen, push a GHCR	✅
+Pruebas automatizadas integradas en CI	npm test con Jest en el pipeline	✅
+Análisis de seguridad y bloqueo en vulnerabilidades críticas	Trivy (exit code en HIGH+), Snyk, Dependabot, CodeQL	✅
+Despliegue automático en entorno cloud simulado con trazabilidad completa	Docker Compose, smoke tests con curl, versionado SHA	✅
+Orquestación de contenedores para garantizar operación en escala	docker compose up --scale web=2 y políticas de runtime	✅
+
+🏁 Resumen Final
+Este proyecto demuestra la automatización completa del ciclo de vida de un microservicio:
+Contenedorización con Docker y publicación en GHCR.
+Pipeline CI/CD con build, test, análisis de seguridad y despliegue automático.
+Validación post-despliegue (smoke tests).
+Orquestación y escalado con Docker Compose.
+Trazabilidad total mediante ramas controladas, PR con revisión y etiquetado de imágenes por commit.
+En otras palabras: cumple todos los criterios de la Evaluación Parcial 2. ✅
