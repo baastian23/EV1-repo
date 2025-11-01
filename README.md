@@ -61,15 +61,20 @@ Pipeline (GitHub Actions):
 Seguridad:
 - Dependabot (npm, Docker y GitHub Actions).
 - CodeQL para análisis estático.
-- Trivy (y Snyk opcional) bloquean el pipeline si hay vulnerabilidades severas.
+- Snyk activado (si `SNYK_TOKEN` está definido):
+	- Open Source (npm) – falla si hay HIGH/CRITICAL.
+	- Code (SAST) – falla si hay HIGH/CRITICAL.
+	- Container (imagen Docker) – falla si hay HIGH/CRITICAL.
+- Trivy (adicional) bloquea en HIGH/CRITICAL.
 
-Análisis de código (opcional/altamente recomendado):
-- SonarCloud: workflow `sonar.yml` ejecuta escaneo y Quality Gate cuando hay `SONAR_TOKEN` definido en Secrets. Los PR desde forks se omiten por política de secretos.
+Análisis de código (alternativas):
+- Snyk (configurado): usa `SNYK_TOKEN` y ejecuta SCA (npm), Code (SAST) y Container.
+- SonarCloud (opcional): workflow `sonar.yml` corre si defines `SONAR_TOKEN`.
 
 Secrets necesarios (repo → Settings → Secrets and variables → Actions):
-- `SONAR_TOKEN` (opcional para SonarCloud/Quality Gate).
-- `SNYK_TOKEN` (opcional si se usa el paso Snyk).
-- `GHCR` usa el `GITHUB_TOKEN` integrado para login y push.
+- `SNYK_TOKEN` para ejecutar Snyk (Open Source, Code y Container).
+- `SONAR_TOKEN` (opcional si habilitas SonarCloud/Quality Gate).
+- `GITHUB_TOKEN` integrado se usa para GHCR (no necesitas crearlo).
 
 Escalabilidad y gobernanza:
 - `docker-compose.yml` define límites de CPU/Mem, `read_only`, `no-new-privileges`, `cap_drop: ALL`.

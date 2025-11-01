@@ -34,6 +34,26 @@ jobs:
       - name: Unit tests (Jest)
         run: npm test
 
+      # Snyk Open Source (SCA) - analiza dependencias npm (bloquea en HIGH+)
+      - name: Snyk Open Source (npm) - fail on HIGH+
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --severity-threshold=high
+
+      # Snyk Code (SAST) - analiza código (bloquea en HIGH+)
+      - name: Snyk Code (SAST) - fail on HIGH+
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: code test
+          args: --severity-threshold=high
+
       - name: Build Docker (local)
         run: docker build -t ev1-repo:ci .
 
@@ -47,7 +67,7 @@ jobs:
           vuln-type: 'os,library'
           severity: 'HIGH,CRITICAL'
 
-      - name: Snyk container test (opcional, bloquea en HIGH+)
+      - name: Snyk Container (image) - fail on HIGH+
         uses: snyk/actions/docker@master
         if: ${{ secrets.SNYK_TOKEN != '' }}
         env:
