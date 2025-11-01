@@ -1,105 +1,96 @@
-EV1 – Microservicio HTML
-
+EV2 – Evaluación Parcial 2 DOY0101
 Integrantes
-- Bastián Concha (@baastian23)
-- Sergio Velasquez (@SheoInformatic)
 
-Descripción breve
-Repositorio base en HTML para practicar control de versiones y DevOps (CI/CD) durante la evaluación parcial.
+Bastián Concha (@baastian23)
+Sergio Velásquez (@SheoInformatic)
 
----
+Descripción General
+Repositorio base en HTML y Node.js utilizado para practicar control de versiones y DevOps (CI/CD) durante la Evaluación Parcial 2.
+El proyecto implementa un pipeline completamente automatizado en GitHub Actions, que incluye integración, pruebas, análisis de seguridad, despliegue simulado y orquestación de contenedores.
 
-Estrategia de ramas
+Estrategia de Ramas (GitFlow)
+Justificación
 
-Para este proyecto implementamos **GitFlow**, porque:
+Se utiliza GitFlow por las siguientes razones:
+Permite separar el código estable en main del código en desarrollo (develop).
+Facilita el trabajo colaborativo mediante ramas feature/*, hotfix/* y release/*.
+Asegura trazabilidad, control de versiones y flujo DevOps claro en entornos educativos.
+Compatible con SemVer (versionado semántico) y CI/CD automatizado.
 
-- Permite separar el código estable en la rama `main` del código en desarrollo en `develop`.
-- Usamos ramas `feature/*` para nuevas funcionalidades y `hotfix/*` para correcciones urgentes.
-- Garantiza trazabilidad y control de versiones en un entorno colaborativo.
-- Comparado con GitFlow que nos da más claridad y control al momento de simular flujos DevOps en el ámbito académico.
+Estructura
+Principales: main (producción) y develop (integración).
+Soporte: feature/<nombre>, release/<x.y.z>, hotfix/<nombre>.
+Flujo de merges:
+feature/* → Pull Request a develop (requiere revisión + CI verde).
+release/* → Pull Request a main (con tag vX.Y.Z) y merge a develop.
+hotfix/* → Pull Request a main (urgente) y merge posterior a develop.
 
-Por esta razón, elegimos **GitFlow** como estrategia de ramificación.
+Convenciones de nombres
+feature/<descripcion-corta>
+hotfix/<descripcion-corta>
+release/<x.y.z>
 
+Estilo de commits (Conventional Commits)
+feat: nueva funcionalidad
+fix: corrección de bug
+docs: documentación
+refactor: refactor interno
+test: pruebas
+chore: tareas de build/devops
 
-## Estrategia de ramificación (GitFlow)
-Usamos **GitFlow**:
-- Principales: `main` (producción) y `develop` (integración).
-- Soporte: `feature/<nombre>`, `release/<x.y.z>`, `hotfix/<nombre>`.
+CI/CD, Calidad y Trazabilidad
+Pipeline (GitHub Actions)
 
-**Justificación:** equipo colaborando en paralelo, necesidad de releases formales y trazabilidad clara. Compatible con **SemVer** y CI.
+Implementa integración y entrega continua (IL2.2 – IL2.4):
 
-### Naming de ramas
-- `feature/<descripcion-corta>`
-- `hotfix/<descripcion-corta>`
-- `release/<x.y.z>`
+Build y Test:
+Instala dependencias y ejecuta pruebas unitarias con Jest + jsdom (npm test).
+Contenedorización (IL2.1):
+Construye una imagen Docker basada en NGINX y la publica en GHCR (GitHub Container Registry).
+Análisis de seguridad (IL2.3):
+Trivy analiza vulnerabilidades (bloquea el pipeline en nivel HIGH+).
+Snyk ejecuta test opcional si existe SNYK_TOKEN.
+Dependabot mantiene actualizadas las dependencias.
+CodeQL realiza análisis estático del código.
 
-### Commits (Conventional Commits)
-- `feat: ...` nueva funcionalidad
-- `fix: ...` corrección de bug
-- `docs: ...` documentación
-- `refactor: ...` refactor interno
-- `test: ...` pruebas
-- `chore: ...` tareas de build/devops
+Despliegue automático (IL2.4):
+Usa Docker Compose para simular un entorno productivo.
+Escala el servicio a 2 réplicas (--scale web=2).
+Valida endpoints (curl http://localhost:8080 → “200 OK”).
+Ejecuta limpieza con docker compose down -v.
 
-### Flujo de merges
-- `feature/*` → **PR a `develop`** (checks verdes, 1 review, *squash merge*).
-- `hotfix/*` → **PR a `main`** (urgente); luego **merge de `main` a `develop`**.
-- `release/*` → PR a `main` (tag `vX.Y.Z`) y PR a `develop`.
+Orquestación (IL2.5):
+Compose define límites de CPU/Memoria y políticas de seguridad (read_only, no-new-privileges, cap_drop: ALL).
+Configurable para Kubernetes (opcional) mediante manifiestos futuros.
 
-### Revisión
-- 1 aprobación mínima.
-- CI (GitHub Actions) en **verde** en push a `develop` y PR a `main`.
+Seguridad y Gobernanza
+Dependabot: actualiza dependencias npm, Docker y GitHub Actions.
+CodeQL: detección de vulnerabilidades estáticas.
+Trivy: escaneo de imagen Docker, falla en vulnerabilidades críticas.
+Snyk: test condicional de seguridad (requiere token).
+NGINX: configurado con headers seguros definidos en nginx.conf.
 
-## CI/CD, Calidad y Trazabilidad
+Escalabilidad y Orquestación
+El archivo docker-compose.yml:
+Define 2 réplicas web para simular balanceo de carga.
+Establece restricciones de recursos (CPU/Memoria) y políticas de seguridad.
+Permite levantar el entorno localmente o dentro del pipeline CI/CD.
 
-Pipeline (GitHub Actions):
-1) Tests unitarios (Jest + jsdom).
-2) Build Docker (NGINX) y escaneo de imagen con Trivy (bloquea en HIGH+). Opcional Snyk si `SNYK_TOKEN` está configurado.
-3) Push de la imagen a GHCR.
-4) Despliegue simulado con Docker Compose (2 réplicas) y smoke tests (200 OK).
+Variables y Secrets necesarios
+Configurar en Settings → Secrets and variables → Actions:
+SONAR_TOKEN → opcional, activa análisis de SonarCloud.
+SNYK_TOKEN → opcional, habilita test de Snyk.
+GITHUB_TOKEN → integrado automáticamente por GitHub para GHCR.
 
-Seguridad:
-- Dependabot (npm, Docker y GitHub Actions).
-- CodeQL para análisis estático.
-- Trivy (y Snyk opcional) bloquean el pipeline si hay vulnerabilidades severas.
+Trazabilidad y Auditoría
+Flujo GitFlow con ramas main, develop, feature/*.
+PRs con checks automáticos (CI verde requerido para merge).
+Imágenes en GHCR versionadas por commit (GIT_SHA) y tag latest.
+Etiquetas OCI en las imágenes (org.opencontainers.image.source y revision) para auditoría.
 
-Análisis de código (opcional/altamente recomendado):
-- SonarCloud: workflow `sonar.yml` ejecuta escaneo y Quality Gate cuando hay `SONAR_TOKEN` definido en Secrets. Los PR desde forks se omiten por política de secretos.
-
-Secrets necesarios (repo → Settings → Secrets and variables → Actions):
-- `SONAR_TOKEN` (opcional para SonarCloud/Quality Gate).
-- `SNYK_TOKEN` (opcional si se usa el paso Snyk).
-- `GHCR` usa el `GITHUB_TOKEN` integrado para login y push.
-
-Escalabilidad y gobernanza:
-- `docker-compose.yml` define límites de CPU/Mem, `read_only`, `no-new-privileges`, `cap_drop: ALL`.
-- NGINX con headers de seguridad en `nginx.conf`.
-
-Ejecución local:
-```sh
-docker build -t ev1-repo:local .
-docker run -d -p 8080:80 ev1-repo:local
-# o con Compose (requiere .env con COMMIT_SHA y OWNER o ajusta la imagen)
-```
-
-Compose local (opcional):
-- Crea un `.env` con:
-	- `OWNER=<tu-usuario-en-minusc>`
-	- `REPO=ev1-repo`
-	- `COMMIT_SHA=<tag-existente-en-GHCR>`
-- Luego: `docker compose pull && docker compose up -d`.
-
-Trazabilidad:
-- Flujo GitFlow (main, develop, feature/*).
-- PRs con checks, imagen versionada en GHCR por commit SHA.
- - Labels OCI en la imagen con `org.opencontainers.image.source` y `revision` (SHA) para auditoría.
-
-## Cómo terminar la evaluación (resumen)
-- [x] Contenedores (Dockerfile) y despliegue simulado (Compose).
-- [x] Pruebas automatizadas en CI (Jest).
-- [x] Escaneo de vulnerabilidades (Trivy) que bloquea en HIGH/CRITICAL.
-- [x] Dependabot y CodeQL.
-- [ ] SonarCloud (agregar `SONAR_TOKEN` para activar Quality Gate obligatorio).
-- [ ] (Opcional para IL2.5 completo) Manifiestos Kubernetes + despliegue con kind.
-
-Si habilitas SonarCloud y (opcionalmente) K8s, el alcance IL2.* queda cubierto al 100%.
+Resumen final de tu entrega:
+Dockerfile y Compose configurados correctamente.
+CI/CD funcional (build → test → scan → deploy).
+Seguridad y gobernanza implementadas (Trivy, Snyk, Dependabot, CodeQL).
+Escalabilidad y orquestación comprobadas (2 réplicas).
+README completo, profesional y alineado con los indicadores.
