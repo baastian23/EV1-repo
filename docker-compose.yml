@@ -18,3 +18,9 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      # Not enforced by plain docker-compose, but documents intent and is enforced by Swarm
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
