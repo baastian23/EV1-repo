@@ -54,22 +54,21 @@ Usamos **GitFlow**:
 
 Pipeline (GitHub Actions):
 1) Tests unitarios (Jest + jsdom).
-2) Build Docker (NGINX) y escaneo de imagen con Trivy (bloquea en HIGH+). Opcional Snyk si `SNYK_TOKEN` está configurado.
+2) Build Docker (NGINX) y escaneo de seguridad con Snyk (Open Source, Code y Container) y Trivy (bloquean en HIGH/CRITICAL).
 3) Push de la imagen a GHCR.
 4) Despliegue simulado con Docker Compose (2 réplicas) y smoke tests (200 OK).
 
 Seguridad:
 - Dependabot (npm, Docker y GitHub Actions).
 - CodeQL para análisis estático.
-- Trivy (y Snyk opcional) bloquean el pipeline si hay vulnerabilidades severas.
+- Snyk (Open Source, Code y Container) y Trivy bloquean el pipeline si hay vulnerabilidades HIGH/CRITICAL.
 
-Análisis de código (opcional/altamente recomendado):
-- SonarCloud: workflow `sonar.yml` ejecuta escaneo y Quality Gate cuando hay `SONAR_TOKEN` definido en Secrets. Los PR desde forks se omiten por política de secretos.
+Análisis de código:
+- Snyk es la herramienta elegida (SCA + SAST + Container). El workflow de Sonar está deshabilitado en este repositorio.
 
 Secrets necesarios (repo → Settings → Secrets and variables → Actions):
-- `SONAR_TOKEN` (opcional para SonarCloud/Quality Gate).
-- `SNYK_TOKEN` (opcional si se usa el paso Snyk).
-- `GHCR` usa el `GITHUB_TOKEN` integrado para login y push.
+- `SNYK_TOKEN` para ejecutar Snyk.
+- `GITHUB_TOKEN` integrado se usa para GHCR (no necesitas crearlo).
 
 Escalabilidad y gobernanza:
 - `docker-compose.yml` define límites de CPU/Mem, `read_only`, `no-new-privileges`, `cap_drop: ALL`.
@@ -97,9 +96,8 @@ Trazabilidad:
 ## Cómo terminar la evaluación (resumen)
 - [x] Contenedores (Dockerfile) y despliegue simulado (Compose).
 - [x] Pruebas automatizadas en CI (Jest).
-- [x] Escaneo de vulnerabilidades (Trivy) que bloquea en HIGH/CRITICAL.
+- [x] Seguridad: Snyk (SCA, SAST, Container) y Trivy bloqueando en HIGH/CRITICAL.
 - [x] Dependabot y CodeQL.
-- [ ] SonarCloud (agregar `SONAR_TOKEN` para activar Quality Gate obligatorio).
-- [ ] (Opcional para IL2.5 completo) Manifiestos Kubernetes + despliegue con kind.
+- [ ] (Opcional) Manifiestos Kubernetes + despliegue con kind para orquestación avanzada.
 
-Si habilitas SonarCloud y (opcionalmente) K8s, el alcance IL2.* queda cubierto al 100%.
+Con Snyk activo y Compose para orquestación, los requisitos solicitados quedan cubiertos.
