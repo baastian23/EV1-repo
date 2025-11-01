@@ -1,24 +1,14 @@
-name: sonar
+name: sonar (disabled)
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  # Deshabilitado: mantener archivo para referencia pero sin disparadores automáticos
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Este workflow está deshabilitado por decisión del proyecto (se usa Snyk)."
+        required: false
 jobs:
   sonarcloud:
-    # Run only if token is present and PRs are not from forks (secrets aren't available to forks)
-    if: ${{ secrets.SONAR_TOKEN != '' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) }}
+    if: false  # bloqueado explícitamente
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-      - name: Quality Gate
-        uses: SonarSource/sonarcloud-quality-gate-action@v1
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - run: echo "SonarCloud deshabilitado; usar Snyk para SCA/SAST/Container."
