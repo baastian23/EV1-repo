@@ -1,13 +1,10 @@
-name: sonar
+name: sonar (disabled)
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  # SonarCloud is intentionally disabled; use Snyk as the analyzer.
+  workflow_dispatch:
 jobs:
   sonarcloud:
-    # Run only if token is present and PRs are not from forks (secrets aren't available to forks)
-    if: ${{ secrets.SONAR_TOKEN != '' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) }}
+    if: false # disabled by decision; keep file for reference only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
