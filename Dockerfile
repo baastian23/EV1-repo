@@ -15,7 +15,7 @@ EXPOSE 80
 # Importante: no establecer USER no-root aquí para permitir bind a :80
 CMD ["nginx", "-g", "daemon off;"]
 
-LABEL org.opencontainers.image.source="https://github.com/<tu-org>/<tu-repo>" \
+LABEL org.opencontainers.image.source="https://github.com/baastian23/EV1-repo" \
       org.opencontainers.image.revision="${GIT_SHA}" \
       org.opencontainers.image.title="EV1-repo" \
       org.opencontainers.image.description="Microservicio estático NGINX para evaluación IL2.*" \

@@ -63,6 +63,14 @@ Seguridad:
 - CodeQL para análisis estático.
 - Trivy (y Snyk opcional) bloquean el pipeline si hay vulnerabilidades severas.
 
+Análisis de código (opcional/altamente recomendado):
+- SonarCloud: workflow `sonar.yml` ejecuta escaneo y Quality Gate cuando hay `SONAR_TOKEN` definido en Secrets. Los PR desde forks se omiten por política de secretos.
+
+Secrets necesarios (repo → Settings → Secrets and variables → Actions):
+- `SONAR_TOKEN` (opcional para SonarCloud/Quality Gate).
+- `SNYK_TOKEN` (opcional si se usa el paso Snyk).
+- `GHCR` usa el `GITHUB_TOKEN` integrado para login y push.
+
 Escalabilidad y gobernanza:
 - `docker-compose.yml` define límites de CPU/Mem, `read_only`, `no-new-privileges`, `cap_drop: ALL`.
 - NGINX con headers de seguridad en `nginx.conf`.
@@ -74,6 +82,24 @@ docker run -d -p 8080:80 ev1-repo:local
 # o con Compose (requiere .env con COMMIT_SHA y OWNER o ajusta la imagen)
 ```
 
+Compose local (opcional):
+- Crea un `.env` con:
+	- `OWNER=<tu-usuario-en-minusc>`
+	- `REPO=ev1-repo`
+	- `COMMIT_SHA=<tag-existente-en-GHCR>`
+- Luego: `docker compose pull && docker compose up -d`.
+
 Trazabilidad:
 - Flujo GitFlow (main, develop, feature/*).
 - PRs con checks, imagen versionada en GHCR por commit SHA.
+ - Labels OCI en la imagen con `org.opencontainers.image.source` y `revision` (SHA) para auditoría.
+
+## Cómo terminar la evaluación (resumen)
+- [x] Contenedores (Dockerfile) y despliegue simulado (Compose).
+- [x] Pruebas automatizadas en CI (Jest).
+- [x] Escaneo de vulnerabilidades (Trivy) que bloquea en HIGH/CRITICAL.
+- [x] Dependabot y CodeQL.
+- [ ] SonarCloud (agregar `SONAR_TOKEN` para activar Quality Gate obligatorio).
+- [ ] (Opcional para IL2.5 completo) Manifiestos Kubernetes + despliegue con kind.
+
+Si habilitas SonarCloud y (opcionalmente) K8s, el alcance IL2.* queda cubierto al 100%.
