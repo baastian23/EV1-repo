@@ -1,33 +1,110 @@
-name: CI (develop push + main PR)
+name: CI/CD Pipeline (push main/develop + PR to main)
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 jobs:
-  build-and-smoke-test:
+  test-build-scan:
     runs-on: ubuntu-latest
+    env:
+      # Exponer SNYK_TOKEN a nivel de job (condiciones no aceptan secrets.* directamente)
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
     steps:
-      - name: Checkout
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Build Docker
-        run: docker build -t ev1-site:ci .
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Run container
-        run: docker run -d -p 8080:80 --name ev1 ev1-site:ci
-
-      - name: Smoke test raíz
+      - name: Instalar dependencias (npm ci / npm install)
         run: |
-          sleep 2
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Ejecutar pruebas unitarias (Jest)
+        run: npm test
+
+      - name: Construir imagen Docker local
+        run: docker build -t ev2-alpha-note:ci .
+
+      - name: Escaneo con Trivy (bloquea en HIGH+)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ev2-alpha-note:ci
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Análisis de seguridad Snyk (opcional)
+        uses: snyk/actions/docker@master
+        if: ${{ env.SNYK_TOKEN != '' }}
+        with:
+          image: ev2-alpha-note:ci
+          args: --severity-threshold=high
+
+      - name: Iniciar sesión en GHCR (solo en push)
+        if: github.event_name == 'push'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Definir metadatos de build
+        run: |
+          echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Build de imagen (etiquetas GHCR)
+        run: |
+          docker build --build-arg GIT_SHA=${GIT_SHA} -t $IMAGE:${TAG} -t $IMAGE:latest .
+
+      - name: Push de imagen a GHCR
+        if: github.event_name == 'push'
+        run: |
+          docker push $IMAGE:${TAG}
+          docker push $IMAGE:latest
+
+  deploy-compose:
+    needs: test-build-scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Login en GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Preparar entorno para Docker Compose
+        run: |
+          echo "COMMIT_SHA=${{ github.sha }}" >> .env
+          echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> .env
+          echo "REPO=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> .env
+          cat .env
+
+      - name: Despliegue (Compose) con 2 réplicas
+        run: |
+          docker compose pull
+          docker compose up -d --scale web=2
+          sleep 8
           curl -sS -I http://localhost:8080 | grep -q "200 OK"
-
-      - name: Smoke test MiCaso.html
-        run: |
           curl -sS -I http://localhost:8080/MiCaso.html | grep -q "200 OK"
 
-      - name: Stop container
+      - name: Finalizar entorno (limpieza)
         if: always()
-        run: docker rm -f ev1
+        run: docker compose down -v

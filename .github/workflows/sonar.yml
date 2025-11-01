@@ -1,0 +1,21 @@
+name: sonar (disabled)
+on:
+  # SonarCloud is intentionally disabled; use Snyk as the analyzer.
+  workflow_dispatch:
+jobs:
+  sonarcloud:
+    if: false # disabled by decision; keep file for reference only
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+      - name: Quality Gate
+        uses: SonarSource/sonarcloud-quality-gate-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
