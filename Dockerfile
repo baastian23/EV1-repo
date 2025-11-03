@@ -1,5 +1,5 @@
 # 1. Imagen base: servidor web NGINX liviano
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 
 # 2. Metadata OCI para trazabilidad (commit, repo, etc.)
 LABEL org.opencontainers.image.source="https://github.com/baastian23/EV1-repo-main"
