@@ -129,4 +129,3 @@ Validación post-despliegue (smoke tests).
 Orquestación y escalado con Docker Compose.
 Trazabilidad total mediante ramas controladas, PR con revisión y etiquetado de imágenes por commit.
 En otras palabras: cumple todos los criterios de la Evaluación Parcial 2. ✅
->>>>>>> ebfb3301e1b32c5b9016df52973a9abdd43bbaac
